@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class CardsPage extends StatelessWidget {
-  const CardsPage({super.key});
+class ListPage extends StatelessWidget {
+  const ListPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Cards - Tarjetas")),
-      body: Text("Cards - Tarjetas"),
+      appBar: AppBar(title: Text("Listas y Scroll")),
+      body: Text("Listas y Scroll"),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.pop(context);

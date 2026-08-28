@@ -6,10 +6,13 @@ class AvatarPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Avatar page"),),
-      floatingActionButton: FloatingActionButton(onPressed: (){
-        Navigator.pop(context);
-      }),
+      appBar: AppBar(title: Text("Avatars")),
+      body: Text("Avatars"),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.pop(context);
+        },
+      ),
     );
   }
 }
