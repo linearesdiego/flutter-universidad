@@ -40,6 +40,11 @@
         "ruta" : "count",
         "icon" : "calculate",
         "texto": "Contador"
+        },
+        {
+        "ruta" : "welcome",
+        "icon" : "gradient",
+        "texto": "Bienvenida - Gradientes"
         }
     ]
 }

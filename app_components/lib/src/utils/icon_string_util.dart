@@ -8,7 +8,8 @@ final Map<String,dynamic> _icons ={
     "input": Icons.input,
     "tune": Icons.tune,
     "list": Icons.list,
-    "calculate":Icons.calculate
+    "calculate":Icons.calculate,
+    "gradient":Icons.gradient
 };
 
 

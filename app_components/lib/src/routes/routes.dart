@@ -8,6 +8,7 @@ import '../pages/inputs_page.dart';
 import '../pages/slider_page.dart';
 import '../pages/list_page.dart';
 import '../pages/home_page.dart';
+import '../pages/welcome_gradient_page.dart';
 
 
 Map<String,WidgetBuilder> getAplicationsRoutes(){
@@ -19,7 +20,8 @@ Map<String,WidgetBuilder> getAplicationsRoutes(){
     "animatedContainer":(BuildContext context) => const AnimatedContainerPage(),
     "inputs":(BuildContext context) => const InputsPage(),
     "slider":(BuildContext context) => const SliderPage(),
-    "list":(BuildContext context) => const ListPage(),
+    "list":(BuildContext context) => const ListaPage(),
     "count":(BuildContext context) => const CountPage(),
+    "welcome":(BuildContext context) => const WelcomeGradientPage(),
   };
 }
