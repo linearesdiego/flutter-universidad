@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:app_ejemplo/utils/preferences.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Preferences.init();
   runApp(const MainApp());
 }
 
@@ -12,12 +15,13 @@ class MainApp extends StatefulWidget {
 }
 
 class _MainAppState extends State<MainApp> {
-  int contador = 0;
+  int contador = Preferences.contador;
 
   void incrementar(){
     setState(() {
       contador++;
     });
+    Preferences.contador = contador;
   }
 
   void _mostrarAlerta(BuildContext context) {
@@ -48,6 +52,7 @@ class _MainAppState extends State<MainApp> {
     setState(() {
       contador--;
     });
+    Preferences.contador = contador;
   }
 
   @override
@@ -61,7 +66,7 @@ class _MainAppState extends State<MainApp> {
         children: [
           Center(child: Text('El contador tiene')),
           Text('$contador'),
-          FloatingActionButton(onPressed: ()=> {},)
+         
           
         ],
       ),
@@ -81,7 +86,7 @@ class _MainAppState extends State<MainApp> {
               backgroundColor: Colors.deepPurple,
               child: Icon(Icons.remove, color: Colors.white),
             ),
-          ],
+          ],  
         ),
       ),
     );
