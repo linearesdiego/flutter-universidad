@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../theme/app_theme.dart';
+import '../widgets/ui.dart';
+import 'login_page.dart';
 
 class ActivityPage extends StatefulWidget {
   const ActivityPage({super.key});
@@ -14,25 +17,34 @@ class ActivityPage extends StatefulWidget {
 class _ActivityPageState extends State<ActivityPage> {
   bool _isRunning = true;
 
+  Future<void> _logout() async {
+    await Supabase.instance.client.auth.signOut();
+    if (!mounted) return;
+    showToast(context, 'Sesión cerrada');
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Nueva actividad'),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-        elevation: 0,
+        actions: [
+          IconButton(icon: const Icon(Icons.logout), onPressed: _logout),
+        ],
       ),
       body: Column(
         children: [
           Expanded(child: mapView()),
-          Container(
+          appearAnimation(Container(
             padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
             decoration: const BoxDecoration(
-              color: Colors.white,
+              color: AppTheme.surfaceColor,
               borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 12)],
+              boxShadow: [BoxShadow(color: Colors.black54, blurRadius: 12)],
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -67,7 +79,7 @@ class _ActivityPageState extends State<ActivityPage> {
                 playButton(() {}),
               ],
             ),
-          ),
+          )),
         ],
       ),
     );
@@ -83,7 +95,7 @@ Widget mapView() {
     ),
     children: [
       TileLayer(
-        urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+        urlTemplate: 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
         userAgentPackageName: 'com.example.running_tracker',
       ),
       const MarkerLayer(
@@ -107,22 +119,23 @@ Widget typeOption({
   return Expanded(
     child: GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: selected ? AppTheme.primaryColor : Colors.grey.shade100,
+          color: selected ? AppTheme.primaryColor : AppTheme.backgroundColor,
           borderRadius: BorderRadius.circular(14),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: selected ? Colors.white : Colors.black54),
+            Icon(icon, color: selected ? Colors.white : AppTheme.textSecondary),
             const SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: selected ? Colors.white : Colors.black54,
+                color: selected ? Colors.white : AppTheme.textSecondary,
               ),
             ),
           ],
@@ -140,7 +153,7 @@ Widget statItem(String value, String label) {
         style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
       ),
       const SizedBox(height: 4),
-      Text(label, style: const TextStyle(color: Colors.black54)),
+      Text(label, style: const TextStyle(color: AppTheme.textSecondary)),
     ],
   );
 }

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../theme/app_theme.dart';
+import '../widgets/ui.dart';
 import 'activity_page.dart';
+import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -13,6 +17,7 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _loading = false;
 
   @override
   void dispose() {
@@ -21,13 +26,27 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void _login() {
+  Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
+    setState(() => _loading = true);
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const ActivityPage()),
-    );
+    try {
+      await Supabase.instance.client.auth.signInWithPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+      if (!mounted) return;
+      showToast(context, '¡Bienvenido! Sesión iniciada');
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const ActivityPage()),
+      );
+    } on AuthException catch (e) {
+      if (mounted) showToast(context, e.message, error: true);
+    } catch (e) {
+      if (mounted) showToast(context, 'No se pudo conectar', error: true);
+    }
+    if (mounted) setState(() => _loading = false);
   }
 
   @override
@@ -38,9 +57,13 @@ class _LoginPageState extends State<LoginPage> {
           padding: const EdgeInsets.all(24),
           child: Form(
             key: _formKey,
-            child: Column(
+            child: appearAnimation(Column(
               children: [
-                const Icon(Icons.directions_run, size: 80, color: Colors.green),
+                const Icon(
+                  Icons.directions_run,
+                  size: 80,
+                  color: AppTheme.primaryColor,
+                ),
                 const SizedBox(height: 16),
                 const Text(
                   'Running Tracker',
@@ -51,12 +74,21 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 16),
                 passwordInput(_passwordController),
                 const SizedBox(height: 24),
-                FilledButton(
+                loadingButton(
+                  text: 'Iniciar sesión',
+                  loading: _loading,
                   onPressed: _login,
-                  child: const Text('Iniciar sesión'),
+                ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const RegisterPage()),
+                  ),
+                  child: const Text('¿No tenés cuenta? Registrate'),
                 ),
               ],
-            ),
+            )),
           ),
         ),
       ),
