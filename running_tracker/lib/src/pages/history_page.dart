@@ -77,6 +77,8 @@ Widget activityCard(Map<String, dynamic> activity, VoidCallback onTap) {
   final seconds = activity['duration_seconds'] as int;
   final date = DateTime.parse(activity['created_at']);
   final route = parseRoute(activity['route']);
+  // Las actividades viejas no tienen parciales (vienen en null)
+  final splits = (activity['splits'] as List?) ?? [];
 
   return Card(
     color: AppTheme.surfaceColor,
@@ -118,6 +120,18 @@ Widget activityCard(Map<String, dynamic> activity, VoidCallback onTap) {
             ],
           ),
         ),
+        // Parciales en una línea: "Km 1: 05:32 · Km 2: 05:40"
+        if (splits.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Text(
+              [
+                for (var i = 0; i < splits.length; i++)
+                  'Km ${i + 1}: ${formatDuration(splits[i] as int)}',
+              ].join(' · '),
+              style: const TextStyle(color: AppTheme.textSecondary),
+            ),
+          ),
       ],
       ),
     ),

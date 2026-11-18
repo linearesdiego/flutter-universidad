@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
@@ -33,6 +34,8 @@ class _ActivityPageState extends State<ActivityPage> {
   final List<LatLng> _route = [];
   double _distanceKm = 0;
   int _seconds = 0;
+  // Parciales: segundos que tardó cada km
+  final List<int> _splits = [];
 
   // Para pausar: segundos acumulados antes de la pausa + desde que se reanudó
   int _secondsBeforePause = 0;
@@ -90,6 +93,7 @@ class _ActivityPageState extends State<ActivityPage> {
       _secondsBeforePause = 0;
       _lastPoint = null;
       _route.clear();
+      _splits.clear();
       _distanceKm = 0;
       _seconds = 0;
     });
@@ -119,6 +123,13 @@ class _ActivityPageState extends State<ActivityPage> {
               1000;
         }
         _lastPoint = point;
+        // Si se completó un km nuevo, se guarda su parcial y vibra.
+        // Como _seconds no avanza en pausa, el tiempo pausado no cuenta.
+        if (_distanceKm.floor() > _splits.length) {
+          final previous = _splits.fold(0, (a, b) => a + b);
+          _splits.add(_seconds - previous);
+          HapticFeedback.vibrate();
+        }
         _route.add(point);
         _position = point;
       });
@@ -167,6 +178,7 @@ class _ActivityPageState extends State<ActivityPage> {
         'duration_seconds': _seconds,
         'calories': calculateCalories(_distanceKm, _isRunning),
         'route': _route.map((p) => [p.latitude, p.longitude]).toList(),
+        'splits': _splits,
       });
       if (!mounted) return;
       showToast(context, '¡Actividad guardada!');
@@ -180,6 +192,7 @@ class _ActivityPageState extends State<ActivityPage> {
   void _reset() {
     setState(() {
       _route.clear();
+      _splits.clear();
       _distanceKm = 0;
       _seconds = 0;
     });

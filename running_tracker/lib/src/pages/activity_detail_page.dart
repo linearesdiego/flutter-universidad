@@ -54,6 +54,8 @@ class ActivityDetailPage extends StatelessWidget {
     final date = DateTime.parse(activity['created_at']);
     final route = parseRoute(activity['route']);
     final speed = seconds > 0 ? km / (seconds / 3600) : 0.0;
+    // Las actividades viejas no tienen parciales (vienen en null)
+    final splits = (activity['splits'] as List?) ?? [];
 
     return Scaffold(
       appBar: AppBar(
@@ -105,6 +107,26 @@ class ActivityDetailPage extends StatelessWidget {
                     detailStat(Icons.local_fire_department, '${activity['calories']}', 'Kcal'),
                   ],
                 ),
+                // Parciales: una fila por km
+                if (splits.isNotEmpty) ...[
+                  const SizedBox(height: 20),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 160),
+                    child: ListView(
+                      shrinkWrap: true,
+                      children: [
+                        for (var i = 0; i < splits.length; i++)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Text(
+                              'Km ${i + 1} — ${formatDuration(splits[i] as int)}',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           )),
