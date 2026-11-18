@@ -27,11 +27,18 @@ class _ActivityPageState extends State<ActivityPage> {
 
   bool _isRunning = true;
   bool _recording = false;
+  bool _paused = false;
   bool _saving = false;
 
   final List<LatLng> _route = [];
   double _distanceKm = 0;
   int _seconds = 0;
+
+  // Para pausar: segundos acumulados antes de la pausa + desde que se reanudó
+  int _secondsBeforePause = 0;
+  DateTime _startTime = DateTime.now();
+  // Último punto que cuenta para la distancia (se borra al reanudar)
+  LatLng? _lastPoint;
 
   Timer? _timer;
   StreamSubscription<Position>? _positionSub;
@@ -79,6 +86,9 @@ class _ActivityPageState extends State<ActivityPage> {
 
     setState(() {
       _recording = true;
+      _paused = false;
+      _secondsBeforePause = 0;
+      _lastPoint = null;
       _route.clear();
       _distanceKm = 0;
       _seconds = 0;
@@ -89,25 +99,44 @@ class _ActivityPageState extends State<ActivityPage> {
 
     // El tiempo se calcula desde la hora de inicio, así no se atrasa
     // si el teléfono pausa la app un rato en segundo plano
-    final startTime = DateTime.now();
+    _startTime = DateTime.now();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      setState(() => _seconds = DateTime.now().difference(startTime).inSeconds);
+      if (_paused) return;
+      setState(() => _seconds =
+          _secondsBeforePause + DateTime.now().difference(_startTime).inSeconds);
     });
 
     _positionSub = Geolocator.getPositionStream(
       locationSettings: locationSettings(),
     ).listen((p) {
+      if (_paused) return; // en pausa no se guardan puntos
       final point = LatLng(p.latitude, p.longitude);
       setState(() {
-        if (_route.isNotEmpty) {
-          final last = _route.last;
+        final last = _lastPoint;
+        if (last != null) {
           _distanceKm += Geolocator.distanceBetween(
                 last.latitude, last.longitude, point.latitude, point.longitude) /
               1000;
         }
+        _lastPoint = point;
         _route.add(point);
         _position = point;
       });
+    });
+  }
+
+  void _togglePause() {
+    setState(() {
+      if (_paused) {
+        // Reanudar: el tiempo vuelve a contar desde ahora y el próximo
+        // punto no suma la distancia desde donde se pausó
+        _startTime = DateTime.now();
+        _lastPoint = null;
+        _paused = false;
+      } else {
+        _secondsBeforePause = _seconds;
+        _paused = true;
+      }
     });
   }
 
@@ -115,7 +144,10 @@ class _ActivityPageState extends State<ActivityPage> {
     _timer?.cancel();
     await _positionSub?.cancel();
     if (!mounted) return;
-    setState(() => _recording = false);
+    setState(() {
+      _recording = false;
+      _paused = false;
+    });
 
     if (_route.length < 2) {
       showToast(context, 'Actividad muy corta, no se guardó', error: true);
@@ -168,7 +200,11 @@ class _ActivityPageState extends State<ActivityPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_recording ? 'Grabando...' : 'Nueva actividad'),
+        title: Text(_paused
+            ? 'En pausa'
+            : _recording
+                ? 'Grabando...'
+                : 'Nueva actividad'),
         actions: [
           IconButton(
             icon: const Icon(Icons.history),
@@ -249,7 +285,17 @@ class _ActivityPageState extends State<ActivityPage> {
                               onPressed: _reset,
                             ),
                           )
-                        : playButton(_recording, _recording ? _stop : _start),
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // Mientras se graba aparece el botón de pausa
+                              if (_recording) ...[
+                                pauseButton(_paused, _togglePause),
+                                const SizedBox(width: 24),
+                              ],
+                              playButton(_recording, _recording ? _stop : _start),
+                            ],
+                          ),
               ],
             ),
           )),
@@ -414,6 +460,27 @@ Widget playButton(bool recording, VoidCallback onPressed) {
       ),
       child: Icon(
         recording ? Icons.stop_rounded : Icons.play_arrow_rounded,
+        size: 52,
+      ),
+    ),
+  );
+}
+
+Widget pauseButton(bool paused, VoidCallback onPressed) {
+  return SizedBox(
+    width: 84,
+    height: 84,
+    child: ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        shape: const CircleBorder(),
+        backgroundColor: paused ? AppTheme.primaryColor : Colors.orange.shade700,
+        foregroundColor: Colors.white,
+        elevation: 4,
+        padding: EdgeInsets.zero,
+      ),
+      child: Icon(
+        paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
         size: 52,
       ),
     ),
